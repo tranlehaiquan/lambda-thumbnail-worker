@@ -16,3 +16,10 @@ export const list = ApiHandler(async (_evt) => {
     body: JSON.stringify(Todo.list()),
   };
 });
+
+export const handler = ApiHandler(async (_evt) => {
+  return {
+    statusCode: 200,
+    body: `Hi from SST ${Date.now()}`,
+  };
+});
