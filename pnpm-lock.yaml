@@ -11,6 +11,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.353.0
         version: 3.353.0(@aws-sdk/signature-v4-crt@3.347.0)
+      '@aws-sdk/lib-storage':
+        specifier: ^3.353.0
+        version: 3.353.0(@aws-sdk/abort-controller@3.347.0)(@aws-sdk/client-s3@3.353.0)
       sharp:
         specifier: ^0.32.1
         version: 0.32.1
@@ -1318,6 +1321,23 @@ packages:
     engines: {node: '>=14.0.0'}
     dependencies:
       tslib: 2.5.3
+
+  /@aws-sdk/lib-storage@3.353.0(@aws-sdk/abort-controller@3.347.0)(@aws-sdk/client-s3@3.353.0):
+    resolution: {integrity: sha512-c2AtgsMM2Ua5hzmCZU4vR5wBGsxxJaYAtT0f4y6z9VFfsgohMNjNlLaqI/5LDCMqRkRZfmRqwZFjffj8UCLnrQ==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      '@aws-sdk/abort-controller': ^3.0.0
+      '@aws-sdk/client-s3': ^3.0.0
+    dependencies:
+      '@aws-sdk/abort-controller': 3.347.0
+      '@aws-sdk/client-s3': 3.353.0(@aws-sdk/signature-v4-crt@3.347.0)
+      '@aws-sdk/middleware-endpoint': 3.347.0
+      '@aws-sdk/smithy-client': 3.347.0
+      buffer: 5.6.0
+      events: 3.3.0
+      stream-browserify: 3.0.0
+      tslib: 2.5.3
+    dev: false
 
   /@aws-sdk/md5-js@3.347.0:
     resolution: {integrity: sha512-mChE+7DByTY9H4cQ6fnWp2x5jf8e6OZN+AdLp6WQ+W99z35zBeqBxVmgm8ziJwkMIrkSTv9j3Y7T9Ve3RIcSfg==}
@@ -3499,6 +3519,13 @@ packages:
       isarray: 1.0.0
     dev: true
 
+  /buffer@5.6.0:
+    resolution: {integrity: sha512-/gDYp/UtU0eA1ys8bOs9J6a+E/KWIY+DZ+Q2WESNUA0jFRsJOc0SNUO6xJ5SGA1xueg3NL65W6s+NY5l9cunuw==}
+    dependencies:
+      base64-js: 1.5.1
+      ieee754: 1.2.1
+    dev: false
+
   /buffer@5.7.1:
     resolution: {integrity: sha512-EHcyIPBQ4BSGlvjB16k5KgAJ27CIsHY/2JBmCRReo48y9rQ3MaUzWX3KVlBa4U7MyX02HdVj0K7C3WaB3ju7FQ==}
     dependencies:
@@ -4319,6 +4346,11 @@ packages:
     resolution: {integrity: sha512-kEcvvCBByWXGnZy6JUlgAp2gBIUjfCAV6P6TgT1/aaQKcmuAEC4OZTV1I4EWQLz2gxZw76atuVyvHhTxvi0Flw==}
     engines: {node: '>=0.4.x'}
     dev: true
+
+  /events@3.3.0:
+    resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
+    engines: {node: '>=0.8.x'}
+    dev: false
 
   /expand-template@2.0.3:
     resolution: {integrity: sha512-XYfuKMvj4O35f/pOXLObndIRvyQ+/+6AhODh+OKWj9S9498pHHn/IMszH+gt0fBCRWMNfk1ZSp5x3AifmnI2vg==}
@@ -6368,6 +6400,13 @@ packages:
     dependencies:
       bl: 5.1.0
     dev: true
+
+  /stream-browserify@3.0.0:
+    resolution: {integrity: sha512-H73RAHsVBapbim0tU2JwwOiXUj+fikfiaoYAKHF3VJfA0pe2BCzkhAHBlLG6REzE+2WNZcxOXjK7lkso+9euLA==}
+    dependencies:
+      inherits: 2.0.4
+      readable-stream: 3.6.2
+    dev: false
 
   /stream-shift@1.0.1:
     resolution: {integrity: sha512-AiisoFqQ0vbGcZgQPY1cdP2I76glaVA/RauYR4G4thNFgkTqr90yXTo4LYX60Jl+sIlPNHHdGSwo01AvbKUSVQ==}

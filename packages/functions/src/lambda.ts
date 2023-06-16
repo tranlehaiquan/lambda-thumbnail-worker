@@ -1,6 +1,7 @@
 import { Bucket } from "sst/node/bucket";
-import { PutObjectCommand, GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { SQSEvent } from "aws-lambda";
+import { Upload } from "@aws-sdk/lib-storage";
 
 type RecordsEvent = {
   eventVersion: string;
@@ -34,30 +35,46 @@ type RecordsEvent = {
 const client = new S3Client({});
 
 export async function handler(event: SQSEvent) {
-  const records = event.Records;
+  console.log(JSON.stringify(event));
+  const records = event.Records || [];
   const prefix = "thumbnail";
   const bucketName = Bucket.sourceBucket.bucketName;
 
-  records.map((record) => {
-    const body = JSON.parse(record.body).Records as RecordsEvent[];
+  await Promise.all(
+    records.map(async (record) => {
+      const body = JSON.parse(record.body).Records as RecordsEvent[];
 
-    body.map(async (item) => {
-      const key = item.s3.object.key;
-      const newKey = `${prefix}/${key}`;
-      const commandPullObject = new GetObjectCommand({
-        Bucket: bucketName,
-        Key: key,
-      });
+      await Promise.all(
+        body.map(async (item) => {
+          const key = item.s3.object.key;
+          const objectName = key.split("/").at(-1);
+          const newKey = `${prefix}/${objectName}`;
 
-      const response = await client.send(commandPullObject);
-      const putObjectCommand = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: newKey,
-        Body: response.Body,
-      });
-      await client.send(putObjectCommand);
-    });
-  });
+          const commandPullObject = new GetObjectCommand({
+            Bucket: bucketName,
+            Key: key,
+          });
+
+          const response = await client.send(commandPullObject);
+          const upload = new Upload({
+            client,
+            params: {
+              Bucket: bucketName,
+              Key: newKey,
+              Body: response.Body,
+              ContentType: response.ContentType,
+            },
+          });
+
+          try {
+            await upload.done();
+          } catch (err) {
+            console.log(err);
+          }
+        })
+      );
+    })
+  );
 
   return {};
 }
