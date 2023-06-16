@@ -5,7 +5,7 @@ import stream from "stream";
 const width = 100;
 const prefix = `${width}w`;
 
-const S3 = new s3.Bucket();
+const S3 = new s3.Bucket('sourceBucket');
 
 // Read stream for downloading from S3
 function readStreamFromS3({ Bucket, Key }) {
