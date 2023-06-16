@@ -1,66 +1,63 @@
-import s3 from "aws-cdk-lib/aws-s3";
-import sharp from "sharp";
-import stream from "stream";
+import { Bucket } from "sst/node/bucket";
+import { PutObjectCommand, GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { SQSEvent } from "aws-lambda";
 
-const width = 100;
-const prefix = `${width}w`;
-
-const S3 = new s3.Bucket('sourceBucket');
-
-// Read stream for downloading from S3
-function readStreamFromS3({ Bucket, Key }) {
-  return S3.getObject({ Bucket, Key }).createReadStream();
-}
-
-// Write stream for uploading to S3
-function writeStreamToS3({ Bucket, Key }) {
-  const pass = new stream.PassThrough();
-
-  return {
-    writeStream: pass,
-    upload: S3.upload({
-      Key,
-      Bucket,
-      Body: pass,
-    }).promise(),
+type RecordsEvent = {
+  eventVersion: string;
+  eventSource: "aws:s3";
+  awsRegion: "us-east-1";
+  eventTime: "2023-06-16T07:55:36.960Z";
+  eventName: "ObjectCreated:Put";
+  userIdentity: { principalId: "AWS:AIDAQDQ45PWVECH7ZPEU2" };
+  requestParameters: { sourceIPAddress: "14.238.91.178" };
+  responseElements: {
+    "x-amz-request-id": "FV0QGEGKG099RTWS";
+    "x-amz-id-2": "b2Bfd6A0Lu/Jh07Sxz+HOJnFO86zrLckjwnNbvqhQDqlVR8gHqskxK0xU8y+qEeW26KF4YiSJL9XxQYH2W5AE03nVCQUt3FX";
   };
-}
+  s3: {
+    s3SchemaVersion: "1.0";
+    configurationId: "YjQ1YjY1ODUtODAyNi00ZDQ2LTk1N2YtMjhmZTYyYTkyZjQw";
+    bucket: {
+      name: "quantranlehai-lambda-thumbna-sourcebucketdc914398-15ejk6xr4pgbs";
+      ownerIdentity: { principalId: "ACLGS5HO9JKQ1" };
+      arn: "arn:aws:s3:::quantranlehai-lambda-thumbna-sourcebucketdc914398-15ejk6xr4pgbs";
+    };
+    object: {
+      key: "imports/Sample-jpg-image-500kb.jpg";
+      size: 512017;
+      eTag: "7c858c1e9e6c971cc360141e92fc918e";
+      sequencer: "00648C1578D78BCA50";
+    };
+  };
+};
 
-// Sharp resize stream
-function streamToSharp(width) {
-  return sharp().resize(width);
-}
+const client = new S3Client({});
 
-import { S3Handler } from "aws-lambda";
+export async function handler(event: SQSEvent) {
+  const records = event.Records;
+  const prefix = "thumbnail";
+  const bucketName = Bucket.sourceBucket.bucketName;
 
-export const main: S3Handler = async (event) => {
-  const s3Record = event.Records[0].s3;
+  records.map((record) => {
+    const body = JSON.parse(record.body).Records as RecordsEvent[];
 
-  // Grab the filename and bucket name
-  const Key = s3Record.object.key;
-  const Bucket = s3Record.bucket.name;
+    body.map(async (item) => {
+      const key = item.s3.object.key;
+      const newKey = `${prefix}/${key}`;
+      const commandPullObject = new GetObjectCommand({
+        Bucket: bucketName,
+        Key: key,
+      });
 
-  // Check if the file has already been resized
-  if (Key.startsWith(prefix)) {
-    return;
-  }
-
-  // Create the new filename with the dimensions
-  const newKey = `${prefix}-${Key}`;
-
-  // Stream to read the file from the bucket
-  const readStream = readStreamFromS3({ Key, Bucket });
-  // Stream to resize the image
-  const resizeStream = streamToSharp(width);
-  // Stream to upload to the bucket
-  const { writeStream, upload } = writeStreamToS3({
-    Bucket,
-    Key: newKey,
+      const response = await client.send(commandPullObject);
+      const putObjectCommand = new PutObjectCommand({
+        Bucket: bucketName,
+        Key: newKey,
+        Body: response.Body,
+      });
+      await client.send(putObjectCommand);
+    });
   });
 
-  // Trigger the streams
-  readStream.pipe(resizeStream).pipe(writeStream);
-
-  // Wait for the file to upload
-  await upload;
-};
+  return {};
+}
