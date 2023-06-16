@@ -1,45 +1,43 @@
-import { StackContext, Api, EventBus, StaticSite, Bucket } from "sst/constructs";
+import { StackContext, Bucket, Queue } from "sst/constructs";
 
 export function API({ stack }: StackContext) {
-  const bus = new EventBus(stack, "bus", {
-    defaults: {
-      retries: 10,
-    },
+  const queue = new Queue(stack, "thumbnailQueue", {
+    consumer: {
+      function: {
+        handler: "packages/functions/src/lambda.handler",
+        environment: {},
+        timeout: 60,
+      }
+    }
   });
 
-  const api = new Api(stack, "api", {
-    defaults: {
-      function: {
-        bind: [bus],
+  const sourceBucket = new Bucket(stack, "sourceBucket", {
+    notifications: {
+      insertImage: {
+        type: "queue",
+        queue,
+        events: ['object_created'],
+        filters: [{ prefix: "imports/" }, { suffix: ".jpg" }],
       },
     },
-    routes: {
-      "GET /": "packages/functions/src/todo.handler",
-      "GET /list": "packages/functions/src/todo.list",
-      "POST /": "packages/functions/src/todo.create",
-    },
   });
 
-  bus.subscribe("todo.created", {
-    handler: "packages/functions/src/events/todo-created.handler",
-  });
+  queue.attachPermissions([sourceBucket]);
+  if(queue.consumerFunction) {
 
-  const web = new StaticSite(stack, "web", {
-    path: "packages/web",
-    buildOutput: "dist",
-    buildCommand: "npm run build",
-    environment: {
-      VITE_APP_API_URL: api.url,
-    },
-  });
+  }
 
-  const sourceBucket = new Bucket(stack, "sourceBucket");
-  const thumbnailBucket = new Bucket(stack, "thumbnailBucket");
+  // const web = new StaticSite(stack, "web", {
+  //   path: "packages/web",
+  //   buildOutput: "dist",
+  //   buildCommand: "npm run build",
+  //   environment: {
+  //     VITE_APP_API_URL: api.url,
+  //   },
+  // });
 
   stack.addOutputs({
-    ApiEndpoint: api.url,
-    WebUrl: web.url,
     SourceBucketName: sourceBucket.bucketName,
-    ThumbnailBucketName: thumbnailBucket.bucketName,
+    Queue: queue.id,
   });
 }
