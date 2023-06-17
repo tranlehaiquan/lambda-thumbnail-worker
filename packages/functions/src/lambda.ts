@@ -2,6 +2,8 @@ import { Bucket } from "sst/node/bucket";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { SQSEvent } from "aws-lambda";
 import { Upload } from "@aws-sdk/lib-storage";
+import stream from "stream";
+import sharp from "sharp";
 
 type RecordsEvent = {
   eventVersion: string;
@@ -32,10 +34,23 @@ type RecordsEvent = {
   };
 };
 
+// Sharp resize stream
+function streamToSharp(width: number) {
+  return sharp().resize(width);
+}
+
 const client = new S3Client({});
 
+// Write stream for uploading to S3
+function writeStreamToS3({ Bucket, Key }: { Bucket: string; Key: string }) {
+  const pass = new stream.PassThrough();
+
+  return {
+    writeStream: pass,
+  };
+}
+
 export async function handler(event: SQSEvent) {
-  console.log(JSON.stringify(event));
   const records = event.Records || [];
   const prefix = "thumbnail";
   const bucketName = Bucket.sourceBucket.bucketName;
@@ -56,15 +71,21 @@ export async function handler(event: SQSEvent) {
           });
 
           const response = await client.send(commandPullObject);
+
+          const pass = new stream.PassThrough();
           const upload = new Upload({
             client,
             params: {
               Bucket: bucketName,
               Key: newKey,
-              Body: response.Body,
+              Body: pass,
               ContentType: response.ContentType,
             },
           });
+
+          const resizeStream = streamToSharp(100);
+          // read from readableStream -> resize -> Write to pass
+          (response.Body as NodeJS.ReadableStream)?.pipe(resizeStream).pipe(pass);
 
           try {
             await upload.done();
