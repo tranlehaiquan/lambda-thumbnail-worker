@@ -1,11 +1,30 @@
-import { StackContext, Bucket, Queue, Api } from "sst/constructs";
+import { StackContext, Bucket, Queue, Api, StaticSite } from "sst/constructs";
 
 export function API({ stack }: StackContext) {
   const queue = new Queue(stack, "thumbnailQueue", {
     consumer: {
       function: {
         handler: "packages/functions/src/lambda.handler",
+        environment: {
+          THUMBNAIL_SIZE: "100",
+        },
       },
+    },
+  });
+
+  const api = new Api(stack, "Api", {
+    routes: {
+      "GET /": "packages/functions/src/preSignedUrl.handler",
+    },
+  });
+
+  // StaticSite
+  const web = new StaticSite(stack, "web", {
+    path: "packages/web",
+    buildOutput: "dist",
+    buildCommand: "npm run build",
+    environment: {
+      VITE_APP_API_URL: api.url,
     },
   });
 
@@ -26,5 +45,6 @@ export function API({ stack }: StackContext) {
   stack.addOutputs({
     SourceBucketName: sourceBucket.bucketName,
     Queue: queue.queueName,
+    SiteUrl: web.url,
   });
 }

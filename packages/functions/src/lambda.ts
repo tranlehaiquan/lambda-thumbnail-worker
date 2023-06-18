@@ -41,15 +41,6 @@ function streamToSharp(width: number) {
 
 const client = new S3Client({});
 
-// Write stream for uploading to S3
-function writeStreamToS3({ Bucket, Key }: { Bucket: string; Key: string }) {
-  const pass = new stream.PassThrough();
-
-  return {
-    writeStream: pass,
-  };
-}
-
 export async function handler(event: SQSEvent) {
   const records = event.Records || [];
   const prefix = "thumbnail";
@@ -63,6 +54,7 @@ export async function handler(event: SQSEvent) {
         body.map(async (item) => {
           const key = item.s3.object.key;
           const objectName = key.split("/").at(-1);
+          // example thumbnail/Sample-jpg-image-500kb.jpg
           const newKey = `${prefix}/${objectName}`;
 
           const commandPullObject = new GetObjectCommand({
@@ -83,9 +75,13 @@ export async function handler(event: SQSEvent) {
             },
           });
 
-          const resizeStream = streamToSharp(100);
+          const resizeStream = streamToSharp(
+            Number(process.env.THUMBNAIL_SIZE || 100)
+          );
           // read from readableStream -> resize -> Write to pass
-          (response.Body as NodeJS.ReadableStream)?.pipe(resizeStream).pipe(pass);
+          (response.Body as NodeJS.ReadableStream)
+            ?.pipe(resizeStream)
+            .pipe(pass);
 
           try {
             await upload.done();
