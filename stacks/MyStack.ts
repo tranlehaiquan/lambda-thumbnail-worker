@@ -9,12 +9,13 @@ import {
 
 export function API({ stack }: StackContext) {
   const POSTGRES_URL = new Config.Secret(stack, "POSTGRES_URL");
+
   const queue = new Queue(stack, "thumbnailQueue", {
     consumer: {
       function: {
-        handler: "packages/functions/src/lambda.handler",
+        handler: "packages/functions/src/consumer.handler",
         environment: {
-          THUMBNAIL_SIZE: "100",
+          THUMBNAIL_SIZE: "200",
         },
       },
     },
@@ -28,6 +29,7 @@ export function API({ stack }: StackContext) {
     },
     routes: {
       "GET /": "packages/functions/src/preSignedUrl.handler",
+      "POST /": "packages/functions/src/generateTask.handler",
     },
   });
 
@@ -52,12 +54,13 @@ export function API({ stack }: StackContext) {
     },
   });
 
-  // queue.attachPermissions([sourceBucket]);
-  queue.bind([sourceBucket]);
+  queue.bind([sourceBucket, POSTGRES_URL]);
+  api.bind([sourceBucket]);
 
   stack.addOutputs({
     SourceBucketName: sourceBucket.bucketName,
     Queue: queue.queueName,
     SiteUrl: web.url,
+    API: api.url,
   });
 }

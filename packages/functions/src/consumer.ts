@@ -4,6 +4,9 @@ import { SQSEvent } from "aws-lambda";
 import { Upload } from "@aws-sdk/lib-storage";
 import stream from "stream";
 import sharp from "sharp";
+import { connectToDB } from "./data-source";
+import { Config } from "sst/node/config";
+import { ImageTask, Status } from "./entity/ImageTask";
 
 type RecordsEvent = {
   eventVersion: string;
@@ -45,6 +48,7 @@ export async function handler(event: SQSEvent) {
   const records = event.Records || [];
   const prefix = "thumbnail";
   const bucketName = Bucket.sourceBucket.bucketName;
+  await connectToDB(Config.POSTGRES_URL);
 
   await Promise.all(
     records.map(async (record) => {
@@ -63,6 +67,13 @@ export async function handler(event: SQSEvent) {
           });
 
           const response = await client.send(commandPullObject);
+          const task = await ImageTask.findOneBy({
+            key,
+          });
+
+          if (task !== null) {
+            task.status = Status.inProcess;
+          }
 
           const pass = new stream.PassThrough();
           const upload = new Upload({
@@ -85,8 +96,18 @@ export async function handler(event: SQSEvent) {
 
           try {
             await upload.done();
+
+            if (task !== null) {
+              task.status = Status.successful;
+              await task.save();
+            }
           } catch (err) {
             console.log(err);
+
+            if (task !== null) {
+              task.status = Status.failed;
+              await task.save();
+            }
           }
         })
       );
