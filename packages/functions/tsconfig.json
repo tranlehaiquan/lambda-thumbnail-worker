@@ -3,6 +3,9 @@
   "compilerOptions": {
     "module": "esnext",
     "baseUrl": ".",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "strictPropertyInitialization": false,
     "paths": {
       "@lambda-thumbnail-worker/core/*": ["../core/src/*"]
     }

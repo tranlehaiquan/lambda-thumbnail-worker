@@ -1,6 +1,14 @@
-import { StackContext, Bucket, Queue, Api, StaticSite } from "sst/constructs";
+import {
+  StackContext,
+  Bucket,
+  Queue,
+  Api,
+  StaticSite,
+  Config,
+} from "sst/constructs";
 
 export function API({ stack }: StackContext) {
+  const POSTGRES_URL = new Config.Secret(stack, "POSTGRES_URL");
   const queue = new Queue(stack, "thumbnailQueue", {
     consumer: {
       function: {
@@ -13,6 +21,11 @@ export function API({ stack }: StackContext) {
   });
 
   const api = new Api(stack, "Api", {
+    defaults: {
+      function: {
+        bind: [POSTGRES_URL],
+      },
+    },
     routes: {
       "GET /": "packages/functions/src/preSignedUrl.handler",
     },

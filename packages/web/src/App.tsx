@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
 
 function App() {
   const [message, setMessage] = useState("Hi 👋");
@@ -13,13 +13,11 @@ function App() {
   return (
     <div className="App">
       <div className="card">
-        <button onClick={onClick}>
-          Message is "<i>{message}</i>"
-        </button>
+        <input type="file" />
+        <button onClick={onClick}>Upload</button>
       </div>
     </div>
-
-  )
+  );
 }
 
-export default App
+export default App;
