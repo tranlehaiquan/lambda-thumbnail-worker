@@ -4,7 +4,7 @@ import { ImageTask } from "./entity/ImageTask";
 
 let connected = false;
 
-export const getAppDateSource = async () => {
+export const connect = async () => {
   if(connected) {
     return;
   }
