@@ -1,13 +1,8 @@
-import { useState } from "react";
 import "./App.css";
 
 function App() {
-  const [message, setMessage] = useState("Hi 👋");
-
   function onClick() {
-    fetch(import.meta.env.VITE_APP_API_URL)
-      .then((response) => response.text())
-      .then(setMessage);
+    console.log("clicked");
   }
 
   return (

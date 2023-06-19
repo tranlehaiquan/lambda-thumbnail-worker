@@ -28,7 +28,7 @@ export function API({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET /": "packages/functions/src/preSignedUrl.handler",
+      "GET /": "packages/functions/src/hello.handler",
       "POST /": "packages/functions/src/generateTask.handler",
     },
   });
