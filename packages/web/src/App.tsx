@@ -29,16 +29,12 @@ const props: UploadProps = {
   customRequest: async (options) => {
     const { onSuccess, onError, file, onProgress, action } = options;
 
-    const blodData = new Blob([file], {
-      type: (file as File).type,
-    });
-
     try {
       onProgress && onProgress({ percent: 40 });
 
       const response = await fetch(action, {
         method: "PUT",
-        body: blodData,
+        body: file,
       });
 
       onProgress && onProgress({ percent: 100 });
