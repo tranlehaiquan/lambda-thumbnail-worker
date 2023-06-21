@@ -26,6 +26,27 @@ const props: UploadProps = {
       message.error(`${info.file.name} file upload failed.`);
     }
   },
+  customRequest: async (options) => {
+    const { onSuccess, onError, file, onProgress, action } = options;
+
+    const blodData = new Blob([file], {
+      type: (file as File).type,
+    });
+
+    try {
+      onProgress && onProgress({ percent: 40 });
+
+      const response = await fetch(action, {
+        method: "PUT",
+        body: blodData,
+      });
+
+      onProgress && onProgress({ percent: 100 });
+      onSuccess && onSuccess(response);
+    } catch (err) {
+      onError && onError(err as any);
+    }
+  },
 };
 
 function App() {

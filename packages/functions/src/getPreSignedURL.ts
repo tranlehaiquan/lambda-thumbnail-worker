@@ -22,9 +22,6 @@ export const handler = ApiHandler(async (event) => {
 
   const bucketName = Bucket.sourceBucket.bucketName;
   const command = new GetObjectCommand({ Bucket: bucketName, Key: key });
-  const object = await s3.send(command);
-
-  console.log(object);
 
   // get presigned url
   const preSigned = await getSignedUrl(s3, command, { expiresIn: 3600 });
