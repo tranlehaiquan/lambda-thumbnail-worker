@@ -13,6 +13,7 @@
     "vitest": "^0.32.0"
   },
   "dependencies": {
+    "http-errors": "^2.0.0",
     "pg": "^8.11.0",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.3.16"

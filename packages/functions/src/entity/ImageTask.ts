@@ -2,7 +2,10 @@ import { Entity, PrimaryGeneratedColumn, Column } from "typeorm";
 import { BaseEntityCustom } from "./BaseEntityCustom";
 
 export enum Status {
-  "initial", "inProcess", "successful", "failed"
+  "initial" = "initial",
+  "inProcess" = "inProcess",
+  "successful" = "successful",
+  "failed" = "failed",
 }
 
 @Entity()
@@ -14,7 +17,11 @@ export class ImageTask extends BaseEntityCustom {
   @Column({ type: "varchar", length: 255 })
   key: string;
 
-  // status 
+  // s3 key thumbnail
+  @Column({ type: "varchar", length: 255, nullable: true })
+  thumbnail: string;
+
+  // status
   @Column({
     type: "varchar",
     enum: Status,

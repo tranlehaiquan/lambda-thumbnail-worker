@@ -10,11 +10,20 @@ import { ImageTask } from "./entity/ImageTask";
 const s3 = new S3Client({});
 const uploadFolder = "imports";
 
+const getFileExtension = (contentType: string) => {
+  if (contentType === "image/jpeg") return "jpg";
+  if (contentType === "image/png") return "png";
+  return "jpg";
+}
+
 export const handler = ApiHandler(async (event) => {
+  const { contentType } = event.queryStringParameters || {};
+  const fileExtension = getFileExtension(contentType || "image/jpeg");
+
   await connectToDB(Config.POSTGRES_URL);
 
   const uuid = randomUUID();
-  const key = `${uploadFolder}/${uuid}.jpg`;
+  const key = `${uploadFolder}/${uuid}.${fileExtension}`;
 
   const newTask = new ImageTask();
   newTask.key = key;
@@ -31,7 +40,7 @@ export const handler = ApiHandler(async (event) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ preSigned, key }),
+      body: JSON.stringify({ preSigned, id: newTask.id }),
     };
   } catch (error) {
     console.error(error);

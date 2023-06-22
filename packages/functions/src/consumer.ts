@@ -7,6 +7,7 @@ import sharp from "sharp";
 import { connectToDB } from "./data-source";
 import { Config } from "sst/node/config";
 import { ImageTask, Status } from "./entity/ImageTask";
+import { EXPORT_DIR } from "./constant";
 
 type RecordsEvent = {
   eventVersion: string;
@@ -46,8 +47,9 @@ const client = new S3Client({});
 
 export async function handler(event: SQSEvent) {
   const records = event.Records || [];
-  const prefix = "thumbnail";
+  const prefix = EXPORT_DIR;
   const bucketName = Bucket.sourceBucket.bucketName;
+
   await connectToDB(Config.POSTGRES_URL);
 
   await Promise.all(
@@ -99,6 +101,7 @@ export async function handler(event: SQSEvent) {
 
             if (task !== null) {
               task.status = Status.successful;
+              task.thumbnail = newKey;
               await task.save();
             }
           } catch (err) {

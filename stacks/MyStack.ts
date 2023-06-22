@@ -28,9 +28,10 @@ export function API({ stack }: StackContext) {
       },
     },
     routes: {
-      "GET /": "packages/functions/src/hello.handler",
-      "GET /getPreSignedURL": "packages/functions/src/getPreSignedURL.handler",
       "POST /": "packages/functions/src/generateTask.handler",
+      "GET /getPreSignedURL": "packages/functions/src/getPreSignedURL.handler",
+      "GET /getThumbnailById": "packages/functions/src/getThumbnailById.handler",
+      "GET /getTaskById": "packages/functions/src/getTaskById.handler",
     },
   });
 
